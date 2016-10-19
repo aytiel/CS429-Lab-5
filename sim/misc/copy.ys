@@ -1,0 +1,59 @@
+#Alexander Lo atl766
+
+	.pos 0
+init:
+	irmovq Stack, %rsp
+	irmovq Stack, %rbp
+	jmp Main
+
+.align 8
+src:
+	.quad 0x00a
+	.quad 0x0b0
+	.quad 0xc00
+dest:
+	.quad 0x111
+	.quad 0x222
+	.quad 0x333
+
+Main:
+	irmovq $3, %rax
+	pushq %rax
+	irmovq dest, %rax
+	pushq %rax
+	irmovq src, %rax
+	pushq %rax
+	call copy_block
+	halt
+
+copy_block:
+	pushq %rbp
+	rrmovq %rsp, %rbp
+	xorq %rsi, %rsi
+	mrmovq 16(%rbp), %rcx
+	mrmovq 24(%rbp), %rdx
+	mrmovq 32(%rbp), %rbx
+	andq %rbx, %rbx
+	jle End
+
+Loop:
+	mrmovq (%rcx), %rax
+	irmovq $-1, %rdi
+	addq %rdi, %rbx
+	rmmovq %rax, (%rdx)
+	irmovq $8, %rdi
+	addq %rdi, %rcx
+	addq %rdi, %rdx
+	xorq %rax, %rsi
+	andq %rbx, %rbx
+	jg Loop
+
+End:
+	rrmovq %rsi, %rax
+	rrmovq %rbp, %rsp
+	popq %rbp
+	ret
+
+	.pos 0x200
+Stack:
+

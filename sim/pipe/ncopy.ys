@@ -1,0 +1,111 @@
+#/* $begin ncopy-ys */
+##################################################################
+# ncopy.ys - Copy a src block of len words to dst.
+# Return the number of positive words (>0) contained in src.
+#
+# Include your name and ID here.
+# Alexander Lo atl766
+# Describe how and why you modified the baseline code.
+#
+# 1. I used the iaddq instruction that was implemented in the HCL as IIADDQ. This saves time because it removes an instruction through each iteration. The irmovq instruction is no longer needed.
+# 2. I implemented loop unrolling. Using this method, 4 array elements are copied from source to destination at a time. This is important because the method accounts for arbitrary array sizes.
+# 3. I used %r8-%r11 to store the values in order to avoid bubbles and data dependencies that could be caused by mrmovq (%rdi), %r8 and rmmovq %r8, (%rsi).
+#
+#
+##################################################################
+# Do not modify this portion
+# Function prologue.
+# %rdi = src, %rsi = dst, %rdx = len
+ncopy:
+
+###################################################################
+# You can modify this portion
+	# Loop header
+	xorq %rax, %rax
+	andq %rdx, %rdx
+	jle Done
+	iaddq $-4, %rdx
+	jl endLoop
+
+Loop:
+	mrmovq (%rdi), %r8
+	mrmovq 8(%rdi), %r9
+	mrmovq 16(%rdi), %r10
+	mrmovq 24(%rdi), %r11
+	rmmovq %r8, (%rsi)
+	andq %r8, %r8
+	jle Npos1
+	iaddq $1, %rax
+
+Npos1:
+	rmmovq %r9, 8(%rsi)
+	andq %r9, %r9
+	jle Npos2
+	iaddq $1, %rax
+
+Npos2:
+	rmmovq %r10, 16(%rsi)
+	andq %r10, %r10
+	jle Npos3
+	iaddq $1, %rax
+
+Npos3:
+	rmmovq %r11, 24(%rsi)
+	andq %r11, %r11
+	jle loopAgain
+	iaddq $1, %rax
+
+loopAgain:
+	iaddq $32, %rdi
+	iaddq $32, %rsi
+	iaddq $-4, %rdx
+	jge Loop
+
+endLoop:
+	iaddq $4, %rdx
+
+pos1:
+	iaddq $-1, %rdx
+	jl Done
+	mrmovq (%rdi), %r8
+	mrmovq 8(%rdi), %r9
+	mrmovq 16(%rdi), %r10
+	mrmovq 24(%rdi), %r11
+	rmmovq %r8, (%rsi)
+	andq %r8, %r8
+	jle pos2
+	iaddq $1, %rax
+
+pos2:
+	iaddq $-1, %rdx
+	jl Done
+	rmmovq %r9, 8(%rsi)
+	andq %r9, %r9
+	jle pos3
+	iaddq $1, %rax
+
+pos3:
+	iaddq $-1, %rdx
+	jl Done
+	rmmovq %r10, 16(%rsi)
+	andq %r10, %r10
+	jle pos4
+	iaddq $1, %rax
+
+pos4:
+	iaddq $-1, %rdx
+	jl Done
+	rmmovq %r11, 24(%rsi)
+	andq %r11, %r11
+	jle Done
+	iaddq $1, %rax
+
+##################################################################
+# Do not modify the following section of code
+# Function epilogue.
+Done:
+	ret
+##################################################################
+# Keep the following label at the end of your function
+End:
+#/* $end ncopy-ys */
